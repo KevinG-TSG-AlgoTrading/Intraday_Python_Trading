@@ -2,7 +2,7 @@
 
 Backtesting code and results for the systematic/algorithmic side of Kevin Gitia's trading — built to support a Seven Points Capital prop-firm application. Each folder below is one strategy: the notebook that detects/backtests it, plus the raw and summary result files the notebook produced.
 
-## Strategies
+## Strategies (backtested)
 
 ### [`9-EMA-Continuation/`](./9-EMA-Continuation) — 9-EMA Continuation (5-MIN, futures/NVDL)
 Locked, frozen signal stack (9-EMA hold + prior-high intact + positive open + VWAP alignment + QQQ/tape filter), morning session only.
@@ -24,6 +24,13 @@ Opening-drive continuation read against prior close / prior-day high / premarket
 Two-layer stop (soft stop + hard brake), VWAP-branch scaled exit ladder. Raw signal validated at 2.73M-signal scale across 516 tickers; full trade-level ladder backtest below.
 - **Full ladder backtest, 2023–2026:** 9,537 trades, 29.9% win rate, net –$297.23 — essentially breakeven on the raw signal, before the full-universe study's recommended time-of-day/opening-range filters are applied to this engine.
 - `EndingVolume_PenetrationStudy.ipynb` (brake/signal study) + `EndingVolume_LadderEngine.ipynb` (trade-level exit backtest) + `ENDVOL_penetration_summary.csv` + `ENDVOL_ladder_trades.csv` (per-trade) + `ENDVOL_ladder_legs.csv` (per-leg scale-out detail).
+
+## Live tooling
+
+### [`Volume-Discovery-Scanner/`](./Volume-Discovery-Scanner) — real-time volume-discovery scanner & alert dashboard
+Not a backtested strategy — the live infrastructure that feeds Ending Volume and the other setups with candidates in real time. Scans a ~600-ticker universe (S&P 500 + Nasdaq 100 + a manually-curated extras list for IPOs/leveraged ETFs) every 2-minute bar, scores each print as current-bar volume ÷ the ticker's own trailing 5-session median at that time slot (median chosen over mean specifically so one outlier day in the lookback can't distort the baseline), and surfaces anything abnormal on a live Tkinter dashboard with two tabs (today's top-10 board, re-ranked every bar; a running log of everything that hit the board that day). High-conviction prints (15x+ baseline volume) also trigger a spoken voice alert (Windows SAPI, with a `pyttsx3` fallback) on a background thread so a blocking text-to-speech call can't stall the next scan cycle.
+- **Running log, Aug 24–Sep 22, 2026:** 821 logged alerts across 401 unique tickers; 77 of those cleared the 15x voice-alert threshold. Standout print: GME at 333.6x its baseline on 9/1/2026.
+- `Volume_Discovery_Scanner.ipynb` (scanner + dashboard + voice alerting) + `VOL_discovery_log.csv` (every alert logged: timestamp, ticker, score, acceleration, volume, baseline, price, HOD flag).
 
 ## Notes
 - All notebooks were developed and run in a local Jupyter environment (data sourced via the Alpaca API), not in a hosted/cloud pipeline.
